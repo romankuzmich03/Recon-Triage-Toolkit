@@ -1,15 +1,45 @@
 import psutil
+import time
 
 
-def collect_process_info():
+def collect_process_info(limit=10):
+
     processes = []
 
-    for process in psutil.process_iter(
-        ["pid", "name", "cpu_percent", "memory_percent"]
-    ):
+    # First CPU measurement
+    for process in psutil.process_iter():
         try:
-            processes.append(process.info)
+            process.cpu_percent()
         except Exception:
             pass
 
-    return processes
+    time.sleep(1)
+
+    # Second CPU measurement
+    for process in psutil.process_iter(
+        ["pid", "name", "memory_percent"]
+    ):
+        try:
+            info = process.info
+
+            processes.append({
+                "pid": info["pid"],
+                "name": info["name"],
+                "cpu": process.cpu_percent(),
+                "memory": info["memory_percent"]
+            })
+
+        except Exception:
+            pass
+
+    processes = sorted(
+        processes,
+        key=lambda x: x["cpu"] or 0,
+        reverse=True
+    )
+
+    return {
+        "top_processes": processes[:limit],
+        "suspicious": [],
+        "status": "OK"
+    }

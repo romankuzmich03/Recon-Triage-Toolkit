@@ -1,10 +1,11 @@
 def calculate_security_score(firewall, ports, processes):
     score = 100
     issues = []
+    info = []
 
     # Firewall
     if firewall.get("firewall") == "disabled":
-        score -= 20
+        score -= 10
         issues.append("Firewall disabled")
     # Open ports
     open_ports = ports.get("open_ports", [])
@@ -14,7 +15,7 @@ def calculate_security_score(firewall, ports, processes):
         if port["port"] == 22:
 
             if ports.get("host") == "127.0.0.1":
-                issues.append(
+                info.append(
                     "SSH running on localhost only"
                 )
 
@@ -51,5 +52,6 @@ def calculate_security_score(firewall, ports, processes):
     return {
         "score": score,
         "status": status,
-        "issues": issues
+        "issues": issues,
+        "info": info
     }

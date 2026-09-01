@@ -7,10 +7,10 @@ from collectors.battery import collect_battery_info
 from collectors.datetime import collect_datetime_info
 from collectors.health import analyze_health
 from security.firewall import check_firewall
-from security.processes import analyse_processes
 from security.ports import check_ports
 from security.score import calculate_security_score
 from reports.generator import save_report
+from collectors.connections import collect_connections_info
 import argparse
 import sys
 from colorama import Fore, Style, init
@@ -36,9 +36,9 @@ def main(args):
     firewall_info = check_firewall()
 
     ports_info = check_ports()
-
-    processes_info = analyse_processes()
     
+    connections_info = collect_connections_info()
+
     security_score = calculate_security_score(
         firewall_info,
         ports_info,
@@ -54,7 +54,8 @@ def main(args):
         "firewall": firewall_info,
         "ports": ports_info,
         "processes": processes_info,
-        "security_score": security_score
+        "security_score": security_score,
+        "connections": connections_info
     }
 
     save_report(report_data)
@@ -98,6 +99,10 @@ def main(args):
         print()
         print("Security Score:")
         print(security_score)
+
+        print()
+        print("Connections:")
+        print(connections_info)
 
         return
 
