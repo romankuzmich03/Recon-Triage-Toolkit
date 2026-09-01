@@ -7,6 +7,10 @@ from collectors.battery import collect_battery_info
 from collectors.datetime import collect_datetime_info
 from collectors.health import analyze_health
 from security.firewall import check_firewall
+from security.processes import analyse_processes
+from security.ports import check_ports
+from security.score import calculate_security_score
+from reports.generator import save_report
 import argparse
 import sys
 from colorama import Fore, Style, init
@@ -30,6 +34,31 @@ def main(args):
     health_info = analyze_health(resources_info, battery_info)
 
     firewall_info = check_firewall()
+
+    ports_info = check_ports()
+
+    processes_info = analyse_processes()
+    
+    security_score = calculate_security_score(
+        firewall_info,
+        ports_info,
+        processes_info
+    )
+
+    report_data = {
+        "system": system_info,
+        "network": network_info,
+        "resources": resources_info,
+        "battery": battery_info,
+        "health": health_info,
+        "firewall": firewall_info,
+        "ports": ports_info,
+        "processes": processes_info,
+        "security_score": security_score
+    }
+
+    save_report(report_data)
+
 
     if args.full:
         print("==== Full System Information ====")
@@ -57,6 +86,18 @@ def main(args):
         print()
         print("Firewall:")
         print(firewall_info)
+
+        print()
+        print("Ports:")
+        print(ports_info)
+
+        print()
+        print("Processes:")
+        print(processes_info)
+
+        print()
+        print("Security Score:")
+        print(security_score)
 
         return
 
