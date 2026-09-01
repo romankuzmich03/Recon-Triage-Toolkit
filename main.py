@@ -6,6 +6,7 @@ from collectors.resources import collect_resources_info
 from collectors.battery import collect_battery_info
 from collectors.datetime import collect_datetime_info
 from collectors.health import analyze_health
+from security.firewall import check_firewall
 import argparse
 import sys
 from colorama import Fore, Style, init
@@ -27,6 +28,8 @@ def main(args):
     datetime_info = collect_datetime_info()
 
     health_info = analyze_health(resources_info, battery_info)
+
+    firewall_info = check_firewall()
 
     if args.full:
         print("==== Full System Information ====")
@@ -51,6 +54,10 @@ def main(args):
         print("Health:")
         print(health_info)
  
+        print()
+        print("Firewall:")
+        print(firewall_info)
+
         return
 
     if args.summary:
@@ -84,8 +91,9 @@ def main(args):
         "resources": resources_info,
         "battery": battery_info,
         "datetime": datetime_info,
-        "health": health_info
-    }
+        "health": health_info,
+        "firewall": firewall_info
+     }
 
     report = save_json_report(full_report)
 

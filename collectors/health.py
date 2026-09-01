@@ -11,12 +11,12 @@ def analyze_health(resources, battery):
         warnings.append("Low battery")
 
     if not warnings:
+        status = "ok"
         warnings.append("System looks healthy")
 
-    if len(warnings) == 0:
-        status = "ok"
     elif len(warnings) < 3:
         status = "warning"
+   
     else:
         status = "critical"
 
