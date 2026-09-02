@@ -6,6 +6,16 @@ def save_report(data, filename="reports/report.json"):
 
     report = {
         "generated": datetime.now().isoformat(),
+ 
+        "summary": {
+            "security_status": data.get("security_score", {}).get("status"),
+            "security_score": data.get("security_score", {}).get("score"),
+            "issues_found": len(
+                data.get("security_score", {}).get("issues", [])
+            ),
+            "connections_checked": data.get("connections", {}).get("count", 0)
+        },
+
         "data": data
     }
 
