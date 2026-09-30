@@ -1,11 +1,23 @@
 import subprocess
-
+SAFE_NETWORK_PROCESSES = [
+    "ControlCenter",
+    "ControlCe",
+    "rapportd",
+    "sharingd",
+    "identityservicesd",
+    "identitys",
+    "replicator",
+]
 
 def collect_connections_info():
     connections = []
+    seen_connections = set()
+
     listen_count = 0
+    listening_count = 0
     established_count = 0
     local_count = 0
+    private_count = 0
     external_count = 0
 
     try:
@@ -29,18 +41,6 @@ def collect_connections_info():
 
             status = "UNKNOWN"
 
-            if (
-                "127.0.0.1" in connection
-                or "localhost" in connection
-                or "fe80" in connection
-                or "192.168." in connection
-                or "10." in connection
-                or connection.startswith("*:")
-            ):
-                local_count += 1
-            else:
-                external_count += 1
-
             if "ESTABLISHED" in connection:
                 status = "ESTABLISHED"
                 established_count += 1
@@ -51,7 +51,19 @@ def collect_connections_info():
             risk = "LOW"
 
             if "LISTEN" in status and connection.startswith("*:"):
-                risk = "MEDIUM"
+
+                if process in SAFE_NETWORK_PROCESSES:
+                    risk = "INFO"
+
+                else:
+                    risk = "MEDIUM"
+
+            if (
+                    "127.0.0.1" in connection
+                    or "[::1]" in connection
+                    or "localhost" in connection
+            ):
+                risk = "LOW"
 
             if "ESTABLISHED" in status and not (
                 "127.0.0.1" in connection
@@ -62,6 +74,37 @@ def collect_connections_info():
             ):
                 risk = "HIGH"
 
+            connection_key = (
+                process,
+                pid,
+                connection,
+                status
+            )
+
+            if connection_key in seen_connections:
+                continue
+
+            seen_connections.add(connection_key)
+
+            if (
+                    "127.0.0.1" in connection
+                    or "localhost" in connection
+                    or "[::1]" in connection
+            ):
+                local_count += 1
+
+            elif (
+                    "192.168." in connection
+                    or "10." in connection
+                    or "172.16." in connection
+            ):
+                private_count += 1
+
+            elif connection.startswith("*:"):
+                listening_count += 1
+
+            else:
+                external_count += 1
 
             connections.append(
                 {
@@ -105,13 +148,14 @@ def collect_connections_info():
                 }
             )
 
-
     return {
         "connections": connections,
         "count": len(connections),
         "listen": listen_count,
+        "listening": listening_count,
         "established": established_count,
         "local": local_count,
+        "private": private_count,
         "external": external_count,
         "findings": findings,
         "finding_count": len(findings)

@@ -5,8 +5,9 @@ def calculate_security_score(firewall, ports, processes):
 
     # Firewall
     if firewall.get("firewall") == "disabled":
-        score -= 10
+        score -= 20
         issues.append("Firewall disabled")
+
     # Open ports
     open_ports = ports.get("open_ports", [])
 
@@ -20,7 +21,7 @@ def calculate_security_score(firewall, ports, processes):
                 )
 
             else:
-                score -= 10
+                score -= 15
                 issues.append(
                     "SSH exposed externally"
                 )
@@ -36,7 +37,13 @@ def calculate_security_score(firewall, ports, processes):
 
     if suspicious:
         score -= 30
-        issues.append("Suspicious processes detected")
+
+        for process in suspicious:
+            issues.append(
+                f"Suspicious process detected: "
+                f"{process.get('name')} "
+                f"(PID: {process.get('pid')})"
+            )
 
     # Do not allow less than 0
     if score < 0:
@@ -44,8 +51,10 @@ def calculate_security_score(firewall, ports, processes):
 
     if score >= 80:
         status = "GOOD"
+
     elif score >= 50:
         status = "WARNING"
+
     else:
         status = "CRITICAL"
 

@@ -20,7 +20,7 @@ def check_firewall():
             "firewall": "disabled",
             "status": "WARNING"
         }
-    except Eception as e:
+    except Exception as e:
         return {
             "firewall": "unknown",
             "error": str(e)

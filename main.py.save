@@ -1,22 +1,56 @@
 from collectors.system import collect_system_info
+from reports.writer import save_json_report
 from collectors.network import collect_network_info
-from security.processes import collect_process_info
+from collectors.processes import collect_process_info
 from collectors.resources import collect_resources_info
 from collectors.battery import collect_battery_info
-from collectors.datetime_info import collect_datetime_info
+from collectors.datetime import collect_datetime_info
 from collectors.health import analyze_health
 from security.firewall import check_firewall
 from security.ports import check_ports
 from security.score import calculate_security_score
 from reports.generator import save_report
 from collectors.connections import collect_connections_info
-from collectors.logs import collect_logs_info
 import argparse
+import sys
 from colorama import Fore, Style, init
 
 init()
 
-def main(arguments):
+def print_summary(report_data):
+    print("\n=================================")
+    print(" CROSS PLATFORM TRIAGE TOOL")
+    print(" SECURITY REPORT")
+    print("=================================\n")
+
+    system = report_data.get("system", {})
+    print("SYSTEM")
+    print(f"Host: {system.get('hostname')}")
+    print(f"OS: {system.get('system')}")
+    print(f"Architecture: {system.get('architecture')}\n")
+
+    score = report_data.get("security_score", {})
+    print("SECURITY SCORE")
+    print(f"Score: {score.get('score')}/100")
+    print(f"Status: {score.get('status')}\n")
+
+    print("ISSUES")
+    for issue in score.get("issues", []):
+        print(f"[!] {issue}")
+
+    print()
+
+    connections = report_data.get("connections", {})
+
+    print("CONNECTIONS")
+    print(f"Total: {connections.get('count', 0)}")
+    print(f"Listening: {connections.get('listen', 0)}")
+    print(f"Established: {connections.get('established', 0)}")
+    print(f"External: {connections.get('external', 0)}")
+
+    print("\n=================================\n")
+
+def main(args):
 
     system_info = collect_system_info()
 
@@ -38,8 +72,6 @@ def main(arguments):
     
     connections_info = collect_connections_info()
 
-    logs_info = collect_logs_info()
-
     security_score = calculate_security_score(
         firewall_info,
         ports_info,
@@ -51,20 +83,18 @@ def main(arguments):
         "network": network_info,
         "resources": resources_info,
         "battery": battery_info,
-        "datetime": datetime_info,
         "health": health_info,
         "firewall": firewall_info,
         "ports": ports_info,
         "processes": processes_info,
         "security_score": security_score,
-        "connections": connections_info,
-        "logs": logs_info
+        "connections": connections_info
     }
 
     save_report(report_data)
 
 
-    if arguments.full:
+    if args.full:
         print("==== Full System Information ====")
         print()
 
@@ -107,13 +137,9 @@ def main(arguments):
         print("Connections:")
         print(connections_info)
 
-        print()
-        print("Logs:")
-        print(logs_info)
-
         return
 
-    if arguments.summary:
+    if args.summary:
         print("=== System Health Summary ===")
         print()
 
@@ -131,6 +157,27 @@ def main(arguments):
             print("-", message)
 
     return
+
+    print("=== System Information ===")
+
+    for key, value in system_info.items():
+        print(f"{key}: {value}")
+
+    full_report = {
+        "system": system_info,
+        "network": network_info,
+        "processes": processes_info,
+        "resources": resources_info,
+        "battery": battery_info,
+        "datetime": datetime_info,
+        "health": health_info,
+        "firewall": firewall_info
+     }
+
+    report = save_json_report(full_report)
+
+    print()
+    print(f"Report saved: {report}")
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(

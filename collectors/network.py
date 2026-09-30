@@ -6,7 +6,7 @@ def collect_network_info():
 
     try:
         ip_address = socket.gethostbyname(hostname)
-    except Exception:
+    except socket.gaierror:
         ip_address = "Unknown"
 
     network_info = {
