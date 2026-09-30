@@ -1,5 +1,6 @@
+.idea/
 .venv/
 __pycache__/
 *.pyc
-.DS_Store
+*.save
 reports/*.json
