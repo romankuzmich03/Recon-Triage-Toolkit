@@ -377,18 +377,6 @@ Supported systems:
 
 ---
 
-# SOC Workflow
-
-The project follows a simplified SOC Tier 1 investigation workflow:
-
-1. Collect endpoint information
-2. Identify security events
-3. Analyze severity
-4. Calculate risk score
-5. Generate security report
-
-
----
 
 # Future Development
 
